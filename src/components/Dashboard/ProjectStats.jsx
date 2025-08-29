@@ -9,7 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const ProjectStats = () => {
-  const { getProjectCounts } = useStore();
+  const { getProjectCounts, setDashboardStatusFilter } = useStore();
   const counts = getProjectCounts();
 
   const stats = [
@@ -53,17 +53,17 @@ const ProjectStats = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
       {stats.map((stat) => (
-        <div key={stat.name} className="card p-6">
+        <button key={stat.name} onClick={() => setDashboardStatusFilter(stat.name)} className="card p-6 text-left">
           <div className="flex items-center">
-            <div className={`p-3 rounded-lg ${stat.color} bg-opacity-10`}>
-              <stat.icon className={`w-6 h-6 ${stat.textColor}`} />
+            <div className={`p-3 rounded-lg ${stat.color} bg-opacity-10 dark:bg-opacity-20`}>
+              <stat.icon className={`w-6 h-6 ${stat.textColor} dark:text-${stat.textColor?.split('text-')[1] || 'gray-300'}`} />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-              <p className="text-2xl font-bold text-gray-900">{stat.count}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.name}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.count}</p>
             </div>
           </div>
-        </div>
+        </button>
       ))}
     </div>
   );

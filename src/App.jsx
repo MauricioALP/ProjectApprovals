@@ -9,6 +9,7 @@ import CreateProjectForm from './components/ProjectForm/CreateProjectForm';
 import ProjectDetail from './components/ProjectDetail/ProjectDetail';
 import ApprovalsList from './components/Approvals/ApprovalsList';
 import Settings from './components/Settings/Settings';
+import EditProjectForm from './components/ProjectForm/EditProjectForm';
 
 function App() {
   const { darkMode } = useStore();
@@ -16,7 +17,7 @@ function App() {
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
       <Router>
-        <div className="flex h-screen bg-background">
+        <div className="flex h-screen bg-background dark:bg-gray-900 dark:text-gray-100">
           {/* Sidebar */}
           <div className="w-64 flex-shrink-0">
             <Sidebar />
@@ -36,6 +37,7 @@ function App() {
                 <Route path="/projects/:id" element={<ProjectDetail />} />
                 <Route path="/approvals" element={<ApprovalsList />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/projects/:id/edit" element={<EditProjectForm />} />
               </Routes>
             </main>
           </div>

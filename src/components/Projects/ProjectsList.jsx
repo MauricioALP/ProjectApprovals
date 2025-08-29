@@ -14,7 +14,8 @@ const ProjectsList = () => {
   const { projects, currentUser, deleteProject, addNotification } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [featureFilter, setFeatureFilter] = useState('all');
+  const [featureFilter, setFeatureFilter] = useState([]);
+  const featureOptions = ['Artificial Intelligence', 'Data', 'Analytics', 'Power Platform'];
 
   // Filter projects for current user
   const userProjects = useMemo(() => {
@@ -27,7 +28,7 @@ const ProjectsList = () => {
       const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            project.scope.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || project.state === statusFilter;
-      const matchesFeature = featureFilter === 'all' || project.features.includes(featureFilter);
+      const matchesFeature = featureFilter.length === 0 || featureFilter.some(f => project.features.includes(f));
       
       return matchesSearch && matchesStatus && matchesFeature;
     });
@@ -118,16 +119,16 @@ const ProjectsList = () => {
 
       {/* Filters */}
       <div className="card p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           {/* Search */}
-          <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <div className="relative flex-1 min-w-[260px]">
+            <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search projects..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field pl-10"
+              className="input-field pl-10 h-10"
             />
           </div>
 
@@ -135,7 +136,7 @@ const ProjectsList = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="input-field"
+            className="input-field w-56 h-10"
           >
             <option value="all">All Statuses</option>
             <option value="Draft">Draft</option>
@@ -145,21 +146,44 @@ const ProjectsList = () => {
             <option value="Completed">Completed</option>
           </select>
 
-          {/* Feature Filter */}
-          <select
-            value={featureFilter}
-            onChange={(e) => setFeatureFilter(e.target.value)}
-            className="input-field"
-          >
-            <option value="all">All Features</option>
-            <option value="Artificial Intelligence">AI</option>
-            <option value="Data">Data</option>
-            <option value="Analytics">Analytics</option>
-            <option value="Power Platform">Power Platform</option>
-          </select>
-
+          {/* Features Filter (multi-select pills) */}
+          <div className="flex-1 min-w-[320px] flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setFeatureFilter([])}
+              className={`px-3 py-2 rounded-lg text-sm border transition-colors ${
+                featureFilter.length === 0
+                  ? 'bg-primary-500 text-white border-primary-500'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+              title="Show all features"
+            >
+              All Features
+            </button>
+            {featureOptions.map(opt => {
+              const isActive = featureFilter.includes(opt);
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() =>
+                    setFeatureFilter(prev =>
+                      prev.includes(opt) ? prev.filter(f => f !== opt) : [...prev, opt]
+                    )
+                  }
+                  className={`px-3 py-2 rounded-lg text-sm border transition-colors ${
+                    isActive
+                      ? 'bg-primary-100 text-primary-700 border-primary-300'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {opt === 'Artificial Intelligence' ? 'AI' : opt}
+                </button>
+              );
+            })}
+          </div>
           {/* Results Count */}
-          <div className="flex items-center text-sm text-gray-600">
+          <div className="ml-auto flex items-center text-sm text-gray-600">
             <FunnelIcon className="w-4 h-4 mr-2" />
             {filteredProjects.length} of {userProjects.length} projects
           </div>
@@ -240,13 +264,23 @@ const ProjectsList = () => {
                   >
                     <EyeIcon className="w-4 h-4" />
                   </Link>
-                  <Link
-                    to={`/projects/${project.id}/edit`}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-                    title="Edit Project"
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                  </Link>
+                  {project.owner === currentUser.name ? (
+                    <Link
+                      to={`/projects/${project.id}/edit`}
+                      className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                      title="Edit Project"
+                    >
+                      <PencilIcon className="w-4 h-4" />
+                    </Link>
+                  ) : (
+                    <button
+                      className="p-2 text-gray-300 rounded-lg cursor-not-allowed"
+                      title="Only the owner can edit this project"
+                      disabled
+                    >
+                      <PencilIcon className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
                 
                 <button

@@ -72,6 +72,7 @@ export const useStore = create(
       currentUser: mockUsers[0], // Simulate logged-in user
       darkMode: false,
       notifications: [],
+      dashboardStatusFilter: 'all',
       
       // Actions
       addProject: (project) => set((state) => ({
@@ -103,6 +104,8 @@ export const useStore = create(
       })),
       
       toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+
+      setDashboardStatusFilter: (status) => set(() => ({ dashboardStatusFilter: status })),
       
       // Computed values
       getProjectsByState: (state) => get().projects.filter(p => p.state === state),
@@ -127,7 +130,8 @@ export const useStore = create(
       partialize: (state) => ({ 
         projects: state.projects, 
         users: state.users, 
-        darkMode: state.darkMode 
+        darkMode: state.darkMode,
+        dashboardStatusFilter: state.dashboardStatusFilter
       }),
     }
   )
