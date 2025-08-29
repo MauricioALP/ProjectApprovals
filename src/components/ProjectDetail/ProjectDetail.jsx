@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { 
@@ -10,11 +10,14 @@ import {
   XCircleIcon
 } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { projects, updateProjectState, addNotification } = useStore();
+  const reportRef = useRef(null);
   
   const project = projects.find(p => p.id === id);
 
@@ -64,14 +67,63 @@ const ProjectDetail = () => {
     });
   };
 
-  const exportToPDF = () => {
-    // This would integrate with jsPDF in a real implementation
-    addNotification({
-      title: 'Export Started',
-      message: 'PDF export functionality would be implemented here',
-      type: 'info',
-      timestamp: Date.now()
-    });
+  const exportToPDF = async () => {
+    try {
+      addNotification({
+        title: 'Export Started',
+        message: 'Generating project PDF report…',
+        type: 'info',
+        timestamp: Date.now()
+      });
+
+      if (!reportRef.current) {
+        throw new Error('Nothing to export');
+      }
+
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+      heightLeft -= pageHeight;
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= pageHeight;
+      }
+
+      const fileName = `${project.name.replace(/\s+/g, '_')}_Report.pdf`;
+      pdf.save(fileName);
+
+      addNotification({
+        title: 'Export Complete',
+        message: `Saved ${fileName}`,
+        type: 'success',
+        timestamp: Date.now()
+      });
+    } catch (error) {
+      addNotification({
+        title: 'Export Failed',
+        message: error?.message || 'Could not generate PDF report',
+        type: 'error',
+        timestamp: Date.now()
+      });
+    }
   };
 
   const renderApprovalStatus = () => {
@@ -262,7 +314,7 @@ const ProjectDetail = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div ref={reportRef} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Information */}
